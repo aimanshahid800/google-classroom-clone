@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+requireLogin();
 
 $class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : 1;
 
@@ -107,10 +108,14 @@ $assignments_query = mysqli_query($conn, "
 </head>
 <body>
 
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php 
+$breadcrumb = $class ? $class['name'] : 'Class';
+$breadcrumb_sub = $class ? $class['section'] : '';
+include '../includes/layout.php'; 
+?>
 
 <div class="main-content">
+    <?php include '../includes/class_tabs.php'; ?>
 
     <!-- Top Bar -->
     <div class="top-bar">

@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+requireLogin();
 
 $class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : 1;
 
@@ -10,16 +11,16 @@ $class_query = mysqli_query($conn, "SELECT c.*, u.name as teacher_name, u.email 
     WHERE c.id = $class_id");
 $class = mysqli_fetch_assoc($class_query);
 
-// Get students
+// Get students (from enrollments)
 $students_query = mysqli_query($conn, "
-    SELECT DISTINCT u.id, u.name, u.email, u.created_at
+    SELECT DISTINCT u.id, u.name, u.email
     FROM users u
-    JOIN submissions s ON u.id = s.student_id
-    JOIN assignments a ON s.assignment_id = a.id
-    WHERE a.class_id = $class_id AND u.role = 'student'
+    JOIN enrollments e ON u.id = e.student_id
+    WHERE e.class_id = $class_id AND u.role = 'student'
     ORDER BY u.name ASC
 ");
 
+$is_teacher = ($class && $class['teacher_id'] == $_SESSION['user_id']);
 $teacher_count = 1;
 $student_count = mysqli_num_rows($students_query);
 ?>
@@ -206,18 +207,35 @@ $student_count = mysqli_num_rows($students_query);
             padding: 8px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: background 0.15s, opacity 0.15s;
+            position: relative;
         }
         .person-row:hover .more-btn { opacity: 1; }
         .more-btn:hover { background: #e8eaed; }
         .more-btn svg { width: 20px; height: 20px; fill: #5f6368; }
+        .more-dropdown {
+            display: none; position: absolute; right: 0; top: 36px;
+            background: white; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            min-width: 150px; z-index: 100; padding: 8px 0;
+        }
+        .more-dropdown.show { display: block; }
+        .more-dropdown a {
+            display: block; padding: 10px 16px; font-size: 13px;
+            color: #202124; text-decoration: none; cursor: pointer;
+        }
+        .more-dropdown a:hover { background: #f1f3f4; }
+        .more-dropdown .danger { color: #d93025; }
     </style>
 </head>
 <body>
 
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php 
+$breadcrumb = $class ? $class['name'] : 'Class';
+$breadcrumb_sub = $class ? $class['section'] : '';
+include '../includes/layout.php'; 
+?>
 
 <div class="main-content">
+    <?php include '../includes/class_tabs.php'; ?>
 
     <!-- Stats Bar -->
     <div class="stats-bar">
@@ -301,9 +319,16 @@ $student_count = mysqli_num_rows($students_query);
                 <div class="name student-name"><?php echo htmlspecialchars($student['name']); ?></div>
                 <div class="email"><?php echo htmlspecialchars($student['email']); ?></div>
             </div>
-            <button class="more-btn" title="More options">
-                <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            </button>
+            <?php if ($is_teacher): ?>
+            <div style="position:relative;">
+                <button class="more-btn" title="More options" onclick="toggleStudentMenu(event, this)">
+                    <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
+                <div class="more-dropdown">
+                    <a class="danger" onclick="removeStudent(<?= $class_id ?>, <?= $student['id'] ?>)">Remove student</a>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endwhile; ?>
 
@@ -329,6 +354,23 @@ function searchStudents() {
         row.style.display = name.includes(val) ? 'flex' : 'none';
     });
 }
+function toggleStudentMenu(event, btn) {
+    event.stopPropagation();
+    document.querySelectorAll('.more-dropdown').forEach(m => m.classList.remove('show'));
+    btn.nextElementSibling.classList.toggle('show');
+}
+function removeStudent(classId, studentId) {
+    if (!confirm('Remove this student from the class?')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= BASE_URL ?>/actions/remove_student.php';
+    form.innerHTML = '<input name="class_id" value="' + classId + '"><input name="student_id" value="' + studentId + '">';
+    document.body.appendChild(form);
+    form.submit();
+}
+document.addEventListener('click', function() {
+    document.querySelectorAll('.more-dropdown').forEach(m => m.classList.remove('show'));
+});
 </script>
 
 </body>

@@ -1,17 +1,17 @@
 <?php
-require_once '../config.php';
-session_start();
+require_once 'config.php';
+requireLogin();
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = mysqli_real_escape_string($conn, trim($_POST['name']));
     $subject = mysqli_real_escape_string($conn, trim($_POST['subject']));
-    $teacher_id = 1;
+    $teacher_id = $_SESSION['user_id'];
     $code = strtoupper(substr(md5(uniqid()), 0, 6));
     if (empty($name)) {
         $error = 'Class name is required!';
     } else {
         mysqli_query($conn, "INSERT INTO classes (name, subject, teacher_id, code) VALUES ('$name','$subject',$teacher_id,'$code')");
-        header('Location: ../home/dashboard.php');
+        header('Location: dashboard.php');
         exit;
     }
 }
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Create Class</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .main-area { margin-left: 280px; margin-top: 80px; padding: 30px; }
         .main-area h1 { font-size: 24px; color: #202124; margin-bottom: 25px; }
@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 <body>
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php include 'includes/navbar.php'; ?>
+<?php include 'includes/sidebar.php'; ?>
 <div class="main-area">
     <h1>Create Class</h1>
     <?php if ($error): ?><p class="error"><?= $error ?></p><?php endif; ?>

@@ -1,11 +1,6 @@
 <?php
-require_once '../config.php';
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
+require_once 'config.php';
+requireLogin();
 
 $user_id = $_SESSION['user_id'];
 
@@ -44,8 +39,8 @@ $sub_query = "
 $sub_result = mysqli_query($conn, $sub_query);
 $total_submitted = mysqli_num_rows($sub_result);
 
-// Total students in class
-$total_query = "SELECT COUNT(*) AS total FROM class_members WHERE class_id = {$assignment['class_id']}";
+// Total students in class (from enrollments)
+$total_query = "SELECT COUNT(*) AS total FROM enrollments WHERE class_id = {$assignment['class_id']}";
 $total_result = mysqli_query($conn, $total_query);
 $total_row = mysqli_fetch_assoc($total_result);
 $total_students = $total_row['total'];
@@ -57,7 +52,7 @@ $total_students = $total_row['total'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Work — Google Classroom</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .view-container {
             max-width: 800px;

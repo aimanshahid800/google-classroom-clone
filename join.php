@@ -1,10 +1,10 @@
 <?php
-require_once '../config.php';
-session_start();
+require_once 'config.php';
+requireLogin();
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $code = strtoupper(mysqli_real_escape_string($conn, trim($_POST['code'])));
-    $student_id = 1;
+    $student_id = $_SESSION['user_id'];
     $result = mysqli_query($conn, "SELECT * FROM classes WHERE code = '$code'");
     $class = mysqli_fetch_assoc($result);
     if (!$class) {
@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'You are already in this class!';
         } else {
             mysqli_query($conn, "INSERT INTO enrollments (class_id, student_id) VALUES ({$class['id']}, $student_id)");
-            header('Location: ../home/dashboard.php');
+            header('Location: dashboard.php');
             exit;
         }
     }
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Join Class</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .main-area { margin-left: 280px; margin-top: 80px; padding: 30px; }
         .main-area h1 { font-size: 24px; color: #202124; margin-bottom: 25px; }
@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 <body>
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php include 'includes/navbar.php'; ?>
+<?php include 'includes/sidebar.php'; ?>
 <div class="main-area">
     <h1>Join a Class</h1>
     <?php if ($error): ?><p class="error"><?= $error ?></p><?php endif; ?>

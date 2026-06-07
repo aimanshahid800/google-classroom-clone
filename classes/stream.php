@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+requireLogin();
 
 // Get class_id from URL
 $class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : 1;
@@ -60,6 +61,24 @@ $assignments_query = mysqli_query($conn, "
         }
         .class-code-box span { display: block; font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
         .class-code-box strong { font-size: 28px; letter-spacing: 4px; }
+        .class-code-copy {
+            background: none; border: none; color: white;
+            cursor: pointer; font-size: 12px; margin-top: 4px;
+            opacity: 0.8; text-decoration: underline;
+        }
+        .class-code-copy:hover { opacity: 1; }
+        .banner-actions {
+            position: absolute; top: 16px; right: 16px;
+            display: flex; gap: 8px;
+        }
+        .banner-btn {
+            background: rgba(255,255,255,0.15);
+            border: none; color: white; cursor: pointer;
+            padding: 8px 16px; border-radius: 4px;
+            font-size: 13px; font-family: 'Google Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .banner-btn:hover { background: rgba(255,255,255,0.25); }
 
         /* Stream Layout */
         .stream-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
@@ -146,19 +165,30 @@ $assignments_query = mysqli_query($conn, "
 </head>
 <body>
 
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php 
+$breadcrumb = $class ? $class['name'] : 'Class';
+$breadcrumb_sub = $class ? $class['section'] : '';
+include '../includes/layout.php'; 
+?>
 
 <div class="main-content">
+    <?php include '../includes/class_tabs.php'; ?>
 
     <!-- Class Banner -->
     <div class="class-banner">
+        <div class="banner-actions">
+            <?php if ($class && $class['teacher_id'] == $_SESSION['user_id']): ?>
+            <button class="banner-btn" onclick="openEditModal(<?= $class_id ?>)">Edit</button>
+            <button class="banner-btn" onclick="if(confirm('Archive this class?'))window.location.href='<?= BASE_URL ?>/actions/archive_class.php?id=<?= $class_id ?>&action=archive'">Archive</button>
+            <?php endif; ?>
+        </div>
         <h1><?php echo $class ? htmlspecialchars($class['name']) : 'My Class'; ?></h1>
         <p><?php echo $class ? htmlspecialchars($class['section'] . ' • ' . $class['subject']) : ''; ?></p>
         <?php if ($class): ?>
         <div class="class-code-box">
             <span>Class Code</span>
-            <strong><?php echo htmlspecialchars($class['code']); ?></strong>
+            <strong id="classCodeDisplay"><?php echo htmlspecialchars($class['code']); ?></strong>
+            <br><button class="class-code-copy" onclick="copyClassCode()">Copy code</button>
         </div>
         <?php endif; ?>
     </div>
@@ -241,6 +271,62 @@ $assignments_query = mysqli_query($conn, "
         </div>
     </div>
 </div>
+
+<!-- Edit Class Modal -->
+<div class="gc-modal-overlay" id="editModalOverlay" onclick="closeEditModal()"></div>
+<div class="gc-modal" id="editModal">
+    <div class="gc-modal-header"><h2>Edit class</h2></div>
+    <form action="<?= BASE_URL ?>/actions/edit_class.php" method="POST">
+        <input type="hidden" name="class_id" id="editClassId" value="">
+        <div class="gc-modal-body">
+            <div class="gc-create-input">
+                <input type="text" name="name" id="editName" required placeholder=" " autocomplete="off">
+                <label for="editName">Class name<span class="req-star">*</span></label>
+            </div>
+            <p class="gc-required-text">*Required</p>
+            <div class="gc-create-input">
+                <input type="text" name="section" id="editSection" placeholder=" " autocomplete="off">
+                <label for="editSection">Section</label>
+            </div>
+            <div class="gc-create-input">
+                <input type="text" name="subject" id="editSubject" placeholder=" " autocomplete="off">
+                <label for="editSubject">Subject</label>
+            </div>
+            <div class="gc-create-input">
+                <input type="text" name="room" id="editRoom" placeholder=" " autocomplete="off">
+                <label for="editRoom">Room</label>
+            </div>
+        </div>
+        <div class="gc-modal-footer">
+            <button type="button" class="gc-btn-text" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" class="gc-btn-text" id="editBtn">Save</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function copyClassCode() {
+    const code = document.getElementById('classCodeDisplay').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.class-code-copy');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy code', 2000);
+    });
+}
+function openEditModal(id) {
+    document.getElementById('editClassId').value = id;
+    document.getElementById('editName').value = '<?= htmlspecialchars($class['name'] ?? '') ?>';
+    document.getElementById('editSection').value = '<?= htmlspecialchars($class['section'] ?? '') ?>';
+    document.getElementById('editSubject').value = '<?= htmlspecialchars($class['subject'] ?? '') ?>';
+    document.getElementById('editRoom').value = '<?= htmlspecialchars($class['room'] ?? '') ?>';
+    document.getElementById('editModalOverlay').classList.add('show');
+    document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal() {
+    document.getElementById('editModalOverlay').classList.remove('show');
+    document.getElementById('editModal').classList.remove('show');
+}
+</script>
 
 </body>
 </html>

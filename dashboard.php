@@ -1,7 +1,7 @@
 <?php
-require_once '../config.php';
-session_start();
-$user_id = 1;
+require_once 'config.php';
+requireLogin();
+$user_id = $_SESSION['user_id'];
 
 // Delete class
 if (isset($_GET['delete'])) {
@@ -20,7 +20,7 @@ $colors = ['#1e6091','#6a1e91','#91501e','#1e9168','#911e4a','#4a911e'];
 <head>
     <meta charset="UTF-8">
     <title>Home - Google Classroom</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .main-area { margin-left: 280px; margin-top: 80px; padding: 30px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
@@ -45,8 +45,8 @@ $colors = ['#1e6091','#6a1e91','#91501e','#1e9168','#911e4a','#4a911e'];
     </style>
 </head>
 <body>
-<?php include '../includes/navbar.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
+<?php include 'includes/navbar.php'; ?>
+<?php include 'includes/sidebar.php'; ?>
 
 <div class="main-area">
     <div class="top-bar">

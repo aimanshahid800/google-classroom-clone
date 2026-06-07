@@ -1,11 +1,6 @@
 <?php
-require_once '../config.php';
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
+require_once 'config.php';
+requireLogin();
 
 $user_id = $_SESSION['user_id'];
 
@@ -64,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$already_submitted) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Assignment — Google Classroom</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .submit-container {
             max-width: 700px;

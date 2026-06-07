@@ -41,3 +41,12 @@ CREATE TABLE submissions (
     FOREIGN KEY (assignment_id) REFERENCES assignments(id),
     FOREIGN KEY (student_id) REFERENCES users(id)
 );
+
+CREATE TABLE enrollments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    class_id INT,
+    student_id INT,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (class_id) REFERENCES classes(id),
+    FOREIGN KEY (student_id) REFERENCES users(id)
+);
